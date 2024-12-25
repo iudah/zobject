@@ -156,6 +156,8 @@ static zobject *zclazz_ctor(zobject *self, va_list *argp) {
       *(voidf *)&class->differ = method;
     } else if (selector == (voidf)zstore) {
       *(voidf *)&class->store = method;
+    } else if (selector == (voidf)zclone) {
+      *(voidf *)&class->clone = method;
     } else {
       fprintf(stderr, "arg#%" PRIu64 " (%p, %p) ignored\n", arg_i, selector,
               method);

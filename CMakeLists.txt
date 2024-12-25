@@ -47,6 +47,12 @@ target_sources(${TARGET} PRIVATE ${SOURCE_FILES})
 target_link_options(${TARGET} PRIVATE ${VERSION_SCRIPT_FLAGS})
 set_target_properties(${TARGET} PROPERTIES LINK_DEPENDS ${VERSION_SCRIPT})
 
+add_executable(example-0 example/example-0.c)
+target_link_libraries(example-0 PRIVATE ${TARGET})
+
+add_executable(example-1 example/example-1.c)
+target_link_libraries(example-1 PRIVATE ${TARGET})
+
 # Tests section
 # Option to enable or disable tests
 option(BUILD_TESTS "Build tests" ON)

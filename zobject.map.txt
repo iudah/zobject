@@ -8,6 +8,8 @@ ZOBJECT{
     zdelete;
     ZObject;
     zclassof;
+    zctor;
+    zdtor;
     ZClazz;
     local:
     *;
