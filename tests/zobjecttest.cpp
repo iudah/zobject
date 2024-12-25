@@ -1,7 +1,8 @@
-#include "../include/zmemory.h"
 #include "../include/zobject.h"
+#include "../include/zmemory.h"
 #include "../include/zobject.r.h"
 #include <gtest/gtest.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 class ZObjectTest : public testing::Test {
@@ -46,6 +47,9 @@ TEST_F(ZObjectTest, StoreTest) {
   fseek(f, 0, SEEK_SET);
   char buffer[1024] = {0};
   fread(buffer, 1, sizeof(buffer), f);
-  EXPECT_STREQ(buffer, "ZObject") << "The class name should be 'ZObject'";
+  char expected_result[256];
+  snprintf(expected_result, sizeof(expected_result), "<ZObject %p>\n", a);
+  EXPECT_STREQ(buffer, expected_result)
+      << "The class name should be 'ZObject', got " << buffer;
   fclose(f);
 }

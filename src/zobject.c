@@ -1,43 +1,79 @@
 #include "../include/zobject.h"
+#include "../include/zclazz.r.h"
 #include "../include/zmemory.h"
+#include "../include/zobject.h"
 #include "../include/zobject.r.h"
 #include <assert.h>
 #include <inttypes.h>
 #include <stdarg.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-struct zclazz {
-  zsize size;
-  zobject *(*ctor)(zobject *self, va_list *args);
-  zobject *(*dtor)(zobject *self);
-  zobject *(*clone)(const zobject *self);
-  int (*differ)(const zobject *self, const zobject *other);
-  zsize (*store)(const zobject *self, FILE *file);
-};
+typedef uint64_t zsize;
+typedef struct zclazz zclazz;
 
 void *zcalloc(const zsize n, const zsize size) { return calloc(n, size); }
+
 void zfree(void *ptr) { return free(ptr); }
+
+zclazz *zclassof(const zobject *object) {
+  assert(object && object->clazz);
+  return object->clazz;
+}
+
+zclazz *zsuper(zclazz *clazz) {
+  assert(clazz && clazz->super);
+  return clazz->super;
+}
+
+zobject *zsuper_ctor(zclazz *clazz, zobject *object, va_list *argp) {
+  const zclazz *superclass = zsuper(clazz);
+  assert(object && superclass);
+  return superclass->ctor(object, argp);
+}
+
+zobject *zctor(zobject *object, va_list *argp) {
+  const zclazz *class = zclassof(object);
+  assert(class->ctor);
+  return class->ctor(object, argp);
+}
 
 zobject *znew(const zclazz *clazz, ...) {
   const zclazz *class = clazz;
-  zobject *object = zcalloc(1, class->size);
-  assert(object);
+  zobject *object;
+  va_list arg;
 
-  *(const zclazz **)object = clazz;
-  if (clazz->ctor) {
-    va_list argz;
-    va_start(argz, clazz);
-    object = clazz->ctor(object, &argz);
-    va_end(argz);
-  }
+  assert(class && class->size);
+  object = zcalloc(1, class->size);
+
+  assert(object);
+  object->clazz = (zclazz *)clazz;
+
+  va_start(arg, clazz);
+  object = zctor(object, &arg);
+  va_end(arg);
+
   return object;
+}
+
+zobject *zsuper_dtor(zclazz *clazz, zobject *object, va_list *argp) {
+  const zclazz *superclass = zsuper(clazz);
+  assert(object && superclass);
+  return superclass->dtor(object);
+}
+
+zobject *zdtor(zobject *self) {
+  const zclazz *class = zclassof(self);
+  assert(class->dtor);
+  return class->dtor(self);
 }
 
 void zdelete(zobject *self) {
   const zclazz **clazz = (const zclazz **)self;
   if (self && *clazz && (*clazz)->dtor)
-    self = (*clazz)->dtor(self);
+    self = zdtor(self);
   zfree(self);
 }
 
@@ -46,13 +82,6 @@ int zdiffer(const zobject *const self, const zobject *const other) {
 
   assert(self && *class && (*class)->differ);
   return (*class)->differ(self, other);
-}
-
-zsize zsizeof(const zobject *self) {
-  const zclazz *const *class = (const zclazz *const *)self;
-
-  assert(self && *class);
-  return (*class)->size;
 }
 
 zobject *zclone(const zobject *self) {
@@ -65,24 +94,96 @@ zobject *zclone(const zobject *self) {
 zsize zstore(const zobject *self, FILE *f) {
   const zclazz *const *class = (const zclazz *const *)self;
 
-  assert(self && *class && (*class)->clone);
+  assert(self && *class && (*class)->store);
   return (*class)->store(self, f);
 }
 
-extern zclazz *ZObject;
+zsize zsizeof(const zobject *object) {
+  const zclazz *class = zclassof(object);
+  return class->size;
+}
 
-static zobject *zobject_ctor(zobject *object, va_list *args) { return object; }
+extern zclazz *ZClazz;
+
+static zobject *zobject_ctor(zobject *object, va_list *argp) { return object; }
+
 static zobject *zobject_dtor(zobject *object) { return object; }
+
 static zobject *zobject_clone(const zobject *object) { return znew(ZObject); }
+
 static int zobject_differ(const zobject *object, const zobject *other) {
-  assert(object && other);
   return object != other && object->clazz != other->clazz;
 }
 
 static zsize zobject_store(const zobject *object, FILE *file) {
-  return fprintf(file, "%s", "ZObject");
+  const zclazz *class = zclassof(object);
+  return fprintf(file, "<%s %p>\n", class->name, object);
 }
 
-zclazz zobject_class = {sizeof(zobject), zobject_ctor,   zobject_dtor,
-                        zobject_clone,   zobject_differ, zobject_store};
-zclazz *ZObject = &zobject_class;
+static zobject *zclazz_dtor(zobject *self) {
+  zclazz *class = (zclazz *)self;
+  fprintf(stdout, "%s: cannot destroy class\n", class->name);
+  return NULL;
+}
+
+static zobject *zclazz_ctor(zobject *self, va_list *argp) {
+  zclazz *class = (zclazz *)self;
+
+  class->name = va_arg(*argp, char *);
+  class->super = va_arg(*argp, zclazz *);
+  class->size = va_arg(*argp, zsize);
+
+  assert(class->super);
+
+  const zsize offset = offsetof(zclazz, ctor);
+
+  memcpy((char *)class + offset, (char *)class->super + offset,
+         zsizeof((zobject *)class->super) - offset);
+
+  // overwrite class methods
+  typedef void (*voidf)();
+  voidf selector;
+  va_list arg = *argp;
+  zsize arg_i = 0;
+  while ((selector = va_arg(arg, voidf))) {
+    voidf method = va_arg(arg, voidf);
+
+    if (selector == (voidf)zctor) {
+      *(voidf *)&class->ctor = method;
+    } else if (selector == (voidf)zdtor) {
+      *(voidf *)&class->dtor = method;
+    } else if (selector == (voidf)zdiffer) {
+      *(voidf *)&class->differ = method;
+    } else if (selector == (voidf)zstore) {
+      *(voidf *)&class->store = method;
+    } else {
+      fprintf(stderr, "arg#%" PRIu64 " (%p, %p) ignored\n", arg_i, selector,
+              method);
+    }
+    ++arg_i;
+  }
+
+  return (zobject *)class;
+}
+
+zclazz z_object_class[] = {{{z_object_class + 1},
+                            "ZObject",
+                            z_object_class,
+                            sizeof(zobject),
+                            zobject_ctor,
+                            zobject_dtor,
+                            zobject_clone,
+                            zobject_differ,
+                            zobject_store},
+                           {{z_object_class + 1},
+                            "ZClazz",
+                            z_object_class,
+                            sizeof(zclazz),
+                            zclazz_ctor,
+                            zclazz_dtor,
+                            zobject_clone,
+                            zobject_differ,
+                            zobject_store}};
+
+zclazz *ZObject = z_object_class;
+zclazz *ZClazz = z_object_class + 1;

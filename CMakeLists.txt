@@ -53,7 +53,7 @@ option(BUILD_TESTS "Build tests" ON)
 
 if(BUILD_TESTS)
   include(include_google_test.cmake)
-  add_executable(zobject_test tests/main.cpp)
+  add_executable(zobject_test tests/zobjecttest.cpp tests/zobjectsubclass.cpp)
   target_link_libraries(zobject_test PRIVATE ${TARGET} gtest gtest_main)
   enable_testing()
 

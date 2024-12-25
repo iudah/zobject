@@ -7,6 +7,8 @@ ZOBJECT{
     zclone;
     zdelete;
     ZObject;
+    zclassof;
+    ZClazz;
     local:
     *;
 };
