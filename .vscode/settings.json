@@ -1,0 +1,2 @@
+// Required in Termux Android environment
+{ "cmake.buildDirectory": "${env:HOME}/${workspaceFolderBasename}/build" }

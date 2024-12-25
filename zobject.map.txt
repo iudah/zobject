@@ -1,0 +1,12 @@
+ZOBJECT{
+    global:
+    znew;
+    zsizeof;
+    zdiffer;
+    zstore;
+    zclone;
+    zdelete;
+    ZObject;
+    local:
+    *;
+};
