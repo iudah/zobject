@@ -24,14 +24,14 @@ extern zclazz *ZObject;
  * @param self Pointer to the object to be cloned.
  * @return Pointer to the cloned object.
  */
-zobject *zclone(const zobject *self);
+void *zclone(const void *self);
 
 /**
  * Returns the size of the given object.
  * @param object Pointer to the object.
  * @return Size of the object.
  */
-zsize zsizeof(const zobject *object);
+zsize zsizeof(const void *object);
 
 /**
  * Compares two objects for differences.
@@ -39,7 +39,7 @@ zsize zsizeof(const zobject *object);
  * @param other Pointer to the second object.
  * @return Non-zero if objects are different, 0 otherwise.
  */
-int zdiffer(const zobject *const self, const zobject *const other);
+int zdiffer(const void *const self, const void *const other);
 
 /**
  * Stores the object's state in a file.
@@ -47,14 +47,18 @@ int zdiffer(const zobject *const self, const zobject *const other);
  * @param f File pointer to write to.
  * @return Number of bytes written.
  */
-zsize zstore(const zobject *self, FILE *f);
+zsize zstore(const void *self, FILE *f);
 
 /**
  * Gets the class of the given object.
  * @param object Pointer to the object.
  * @return Pointer to the class of the object.
  */
-zclazz *zclassof(const zobject *object);
+void *zclassof(const void *object);
+
+#define Z_DECLARE_CLASS_TYPE(clazz, type)                                      \
+  extern const zclazz *clazz;                                                  \
+  typedef struct clazz type;
 
 #ifdef __cplusplus
 }

@@ -1,1 +1,9 @@
-set(HEADER_FILES include/zmemory.r.h)
+set(HEADER_FILES 
+include/zmemory.h
+include/zobject.r.h
+include/zobject.h
+include/zclazz.r.h
+include/zclazz.h
+include/core/zobjectdef.h
+include/zobjectdef.r.h
+)

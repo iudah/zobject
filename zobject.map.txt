@@ -10,6 +10,8 @@ ZOBJECT{
     zclassof;
     zctor;
     zdtor;
+    zsuper_ctor;
+    zsuper_dtor;
     ZClazz;
     local:
     *;

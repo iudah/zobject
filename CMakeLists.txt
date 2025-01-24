@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(ZObject VERSION 1.0 DESCRIPTION "ZObject OOP simulation in C")
+project(ZObject VERSION 2.0 DESCRIPTION "ZObject OOP emulation in C")
 
 set(TARGET zobject)
 
@@ -41,11 +41,25 @@ target_link_options(
     ${VERSION_SCRIPT_FLAGS}
 )
 
+include(ExternalProject)
+
+ExternalProject_Add(
+  Zot 
+  SOURCE_DIR /sdcard/Jay/Projects/xab_laud_ubject/zot/
+  CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/zot
+  BUILD_ALWAYS TRUE
+  BUILD_BYPRODUCTS ${CMAKE_BINARY_DIR}/zot/lib/libzot.so
+)
+
 # Main library setup
 add_library(${TARGET} SHARED)
 target_sources(${TARGET} PRIVATE ${SOURCE_FILES})
 target_link_options(${TARGET} PRIVATE ${VERSION_SCRIPT_FLAGS})
+target_link_libraries(${TARGET} PRIVATE zot)
+target_include_directories(${TARGET} PRIVATE ${CMAKE_BINARY_DIR}/zot/include )
+target_link_directories(${TARGET} PRIVATE ${CMAKE_BINARY_DIR}/zot/lib )
 set_target_properties(${TARGET} PROPERTIES LINK_DEPENDS ${VERSION_SCRIPT})
+add_dependencies(${TARGET} Zot)
 
 add_executable(example-0 example/example-0.c)
 target_link_libraries(example-0 PRIVATE ${TARGET})

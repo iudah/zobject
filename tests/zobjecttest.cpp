@@ -8,8 +8,8 @@
 class ZObjectTest : public testing::Test {
 protected:
   void SetUp() override {
-    a = znew(ZObject);
-    b = znew(ZObject);
+    a = znew(ZObject, NULL);
+    b = znew(ZObject, NULL);
     aa = zclone(a);
   }
   void TearDown() override {
@@ -18,9 +18,9 @@ protected:
     zdelete(a);
   }
 
-  zobject *a;
-  zobject *b;
-  zobject *aa;
+  void *a;
+  void *b;
+  void *aa;
 };
 
 TEST_F(ZObjectTest, SizeTest) {

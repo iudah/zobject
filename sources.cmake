@@ -1,1 +1,3 @@
-set(SOURCE_FILES src/zobject.c) 
+set(SOURCE_FILES 
+src/zobject.c
+)

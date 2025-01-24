@@ -1,22 +1,23 @@
-#include "../include/zclazz.r.h"
-#include "../include/zmemory.h"
-#include "../include/zobject.h"
 #include <cstdio>
 #include <gtest/gtest.h>
 #include <stdlib.h>
 
 extern "C" {
+#include "../include/zclazz.r.h"
+#include "../include/zmemory.h"
+#include "../include/zobject.h"
+
 static int any_differ(const zobject *object, const zobject *other) { return 0; }
 }
 
 class ZSubclassTest : public testing::Test {
 protected:
   void SetUp() override {
-    a = znew(ZObject);
+    a = znew(ZObject, NULL);
 
     Any = (zclazz *)znew(ZClazz, "Any", ZObject, zsizeof(a), zdiffer,
                          any_differ, NULL);
-    b = znew(Any);
+    b = znew(Any, NULL);
   }
 
   void TearDown() override {
@@ -24,8 +25,8 @@ protected:
     zdelete(a);
   }
 
-  zobject *a;
-  zobject *b;
+  void *a;
+  void *b;
   zclazz *Any;
 };
 
@@ -44,8 +45,8 @@ TEST_F(ZSubclassTest, ClassNamesTest) {
 
   char buffer_[1024];
   snprintf(buffer_, sizeof(buffer_), "<%s %p>\n<%s %p>\n<%s %p>\n",
-           zclassof(a)->name, a, zclassof(b)->name, b,
-           zclassof((zobject *)Any)->name, Any);
+           ((zclazz *)zclassof(a))->name, a, ((zclazz *)zclassof(b))->name, b,
+           ((zclazz *)zclassof((zobject *)Any))->name, Any);
 
   EXPECT_STREQ(buffer, buffer_) << "The output should be: " << buffer_;
 }

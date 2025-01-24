@@ -33,7 +33,7 @@ zobject *Person_dtor(zobject *self) {
 // Override clone method for Person
 zobject *Person_clone(const zobject *self) {
   const Person *person = (const Person *)self;
-  return znew(zclassof(self), person->name, person->age);
+  return znew(zclassof(self), person->name, person->age, NULL);
 }
 
 // Override differ method for Person
@@ -58,7 +58,7 @@ int main() {
       zdtor, Person_dtor, zclone, Person_clone, zdiffer, Person_differ, NULL);
 
   // Create a Person instance
-  Person *p1 = (Person *)znew(PersonClass, "Alice", 30);
+  Person *p1 = (Person *)znew(PersonClass, "Alice", 30, NULL);
   printf("Person 1: Name = %s, Age = %d\n", p1->name, p1->age);
 
   // Clone the Person instance
