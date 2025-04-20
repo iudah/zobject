@@ -1,8 +1,5 @@
 #include "../include/zobject.h"
-#include "../include/zclazz.r.h"
-#include "../include/zmemory.h"
-#include "../include/zobject.h"
-#include "../include/zobject.r.h"
+
 #include <assert.h>
 #include <inttypes.h>
 #include <stdarg.h>
@@ -12,6 +9,11 @@
 #include <string.h>
 #include <sys/cdefs.h>
 #include <zot.h>
+
+#include "../include/zclazz.r.h"
+#include "../include/zmemory.h"
+#include "../include/zobject.h"
+#include "../include/zobject.r.h"
 
 typedef uint64_t zsize;
 typedef struct zclazz zclazz;
@@ -72,8 +74,7 @@ zobject *zdtor(zobject *self) {
 void zdelete(void *object) {
   zobject *self = object;
   const zclazz **clazz = (const zclazz **)self;
-  if (self && *clazz && (*clazz)->dtor)
-    self = zdtor(self);
+  if (self && *clazz && (*clazz)->dtor) self = zdtor(self);
   zfree(self);
 }
 
@@ -170,8 +171,8 @@ static zobject *zclazz_ctor(zobject *self, va_list *argp) {
     } else if (selector == (voidf)zclone) {
       *(voidf *)&class->clone = method;
     } else {
-      fprintf(stderr, "arg#%" PRIu64 " (%p, %p) ignored\n", arg_i, selector,
-              method);
+      // fprintf(stderr, "arg#%" PRIu64 " (%p, %p) ignored\n", arg_i, selector,
+      //         method);
     }
     ++arg_i;
   }
@@ -202,8 +203,6 @@ zclazz *ZObject = z_object_class;
 zclazz *ZClazz = z_object_class + 1;
 
 static void __attribute__((constructor(100))) on_load() {
-  if (ZObject)
-    ZObject = z_object_class;
-  if (ZClazz)
-    ZClazz = z_object_class + 1;
+  if (ZObject) ZObject = z_object_class;
+  if (ZClazz) ZClazz = z_object_class + 1;
 }

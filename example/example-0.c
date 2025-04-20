@@ -1,7 +1,8 @@
+#include <stdio.h>
+
 #include "../include/zclazz.r.h"
 #include "../include/zmemory.h"
 #include "../include/zobject.h"
-#include <stdio.h>
 
 int main() {
   // Creating a ZObject

@@ -1,9 +1,10 @@
 #ifndef ZOBJECT_H
 #define ZOBJECT_H
 
+#include <stdio.h>
+
 #include "zclazz.h"
 #include "zmemory.h"
-#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,8 +57,8 @@ zsize zstore(const void *self, FILE *f);
  */
 void *zclassof(const void *object);
 
-#define Z_DECLARE_CLASS_TYPE(clazz, type)                                      \
-  extern const zclazz *clazz;                                                  \
+#define Z_DECLARE_CLASS_TYPE(clazz, type) \
+  extern const zclazz *clazz;             \
   typedef struct clazz type;
 
 #ifdef __cplusplus

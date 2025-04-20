@@ -1,8 +1,9 @@
 #ifndef ZOBJECT_R_H
 #define ZOBJECT_R_H
 
-#include "zmemory.h"
 #include <stdarg.h>
+
+#include "zmemory.h"
 
 #ifdef __cplusplus
 extern "C" {

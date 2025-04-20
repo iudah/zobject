@@ -1,9 +1,10 @@
 #ifndef ZCLAZZ_R_H
 #define ZCLAZZ_R_H
 
-#include "zobject.r.h"
 #include <stdarg.h>
 #include <stdio.h>
+
+#include "zobject.r.h"
 
 /**
  * Forward declaration of the zclazz structure.

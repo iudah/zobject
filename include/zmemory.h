@@ -1,8 +1,9 @@
 #ifndef ZMEMORY_H
 #define ZMEMORY_H
 
-#include "zclazz.h"
 #include <stdint.h>
+
+#include "zclazz.h"
 
 #ifdef __cplusplus
 extern "C" {

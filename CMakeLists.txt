@@ -12,8 +12,8 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(C_WARNINGS "-Wall -Wextra -Wshadow -Wformat=2 -Wunused")
 
 # Set flags for Debug and Release configurations
-set(CMAKE_C_FLAGS_DEBUG     "${CMAKE_C_FLAGS_DEBUG} -ggdb3 -O0 -fno-omit-frame-pointer -fsanitize=address")
-set(CMAKE_C_FLAGS_RELEASE   "${CMAKE_C_FLAGS_RELEASE} -O3")
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -ggdb3 -O0 -fno-omit-frame-pointer -fsanitize=address")
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3")
 
 # Set version script
 set(VERSION_SCRIPT ${CMAKE_SOURCE_DIR}/zobject.map.txt)
@@ -33,33 +33,67 @@ target_compile_features(zobject_c_flags INTERFACE c_std_17)
 target_compile_options(
   zobject_c_flags
   INTERFACE
-    "$<BUILD_INTERFACE:${C_WARNINGS}>"
+  "$<BUILD_INTERFACE:${C_WARNINGS}>"
 )
 target_link_options(
   zobject_c_flags
   INTERFACE
-    ${VERSION_SCRIPT_FLAGS}
+  ${VERSION_SCRIPT_FLAGS}
 )
 
 include(ExternalProject)
 
-ExternalProject_Add(
-  Zot 
-  SOURCE_DIR /sdcard/Jay/Projects/xab_laud_ubject/zot/
-  CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/zot
-  BUILD_ALWAYS TRUE
-  BUILD_BYPRODUCTS ${CMAKE_BINARY_DIR}/zot/lib/libzot.so
-)
+list(APPEND CMAKE_PREFIX_PATH
+  "${CMAKE_BINARY_DIR}/memalloc/lib/cmake/memalloc"
+  "${CMAKE_BINARY_DIR}/zot/lib/cmake/zot")
+
+find_package(memalloc QUIET)
+if(NOT memalloc_FOUND)
+  ExternalProject_Add(
+    MemAlloc
+    SOURCE_DIR /sdcard/Jay/Projects/xab_laud_ubject/memalloc/
+    INSTALL_DIR ${CMAKE_BINARY_DIR}/memalloc
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DBUILD_EXEC=OFF
+    BUILD_ALWAYS OFF
+    STAMP_DIR ${CMAKE_BINARY_DIR}/stamps
+  )
+endif()
+
+find_package(zot QUIET)
+if(NOT zot_FOUND)
+  ExternalProject_Add(
+    Zot
+    SOURCE_DIR /sdcard/Jay/Projects/xab_laud_ubject/zot/
+    INSTALL_DIR ${CMAKE_BINARY_DIR}/zot
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}
+    BUILD_ALWAYS OFF
+    STAMP_DIR ${CMAKE_BINARY_DIR}/stamps
+  )
+endif()
+
 
 # Main library setup
 add_library(${TARGET} SHARED)
 target_sources(${TARGET} PRIVATE ${SOURCE_FILES})
 target_link_options(${TARGET} PRIVATE ${VERSION_SCRIPT_FLAGS})
-target_link_libraries(${TARGET} PRIVATE zot)
-target_include_directories(${TARGET} PRIVATE ${CMAKE_BINARY_DIR}/zot/include )
-target_link_directories(${TARGET} PRIVATE ${CMAKE_BINARY_DIR}/zot/lib )
 set_target_properties(${TARGET} PROPERTIES LINK_DEPENDS ${VERSION_SCRIPT})
-add_dependencies(${TARGET} Zot)
+target_include_directories(${TARGET} PRIVATE
+  include
+  ${CMAKE_BINARY_DIR}/zot/include)
+target_link_libraries(${TARGET} PRIVATE memalloc zot)
+
+if(NOT memalloc_FOUND)
+  target_link_directories(${TARGET} PRIVATE ${CMAKE_BINARY_DIR}/memalloc/lib)
+  add_dependencies(${TARGET} MemAlloc)
+  add_dependencies(Zot MemAlloc)
+endif()
+
+if(NOT zot_FOUND)
+  target_include_directories(${TARGET} PRIVATE ${CMAKE_BINARY_DIR}/zot/include)
+  target_link_directories(${TARGET} PRIVATE ${CMAKE_BINARY_DIR}/zot/lib)
+  add_dependencies(${TARGET} Zot)
+endif()
+
 
 add_executable(example-0 example/example-0.c)
 target_link_libraries(example-0 PRIVATE ${TARGET})
@@ -82,5 +116,8 @@ if(BUILD_TESTS)
 endif()
 
 # Install targets
-install(TARGETS ${TARGET} DESTINATION bin)
+install(TARGETS ${TARGET} EXPORT ZobjectTargets LIBRARY DESTINATION lib INCLUDES DESTINATION include)
 install(FILES ${HEADER_FILES} DESTINATION include)
+install(EXPORT ZobjectTargets FILE zobject-config.cmake DESTINATION lib/cmake/zobject)
+
+export(EXPORT ZobjectTargets FILE "${CMAKE_BINARY_DIR}/zobject-config.cmake")

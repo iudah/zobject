@@ -1,14 +1,15 @@
-#include "../include/zclazz.r.h"
-#include "../include/zmemory.h"
-#include "../include/zobject.h"
 #include <stdio.h>
 #include <string.h>
 
+#include "../include/zclazz.r.h"
+#include "../include/zmemory.h"
+#include "../include/zobject.h"
+
 // Define the Person struct
 typedef struct {
-  zobject base; // Base object
-  char *name;   // Name of the person
-  int age;      // Age of the person
+  zobject base;  // Base object
+  char *name;    // Name of the person
+  int age;       // Age of the person
 } Person;
 
 // Person constructor
@@ -17,7 +18,7 @@ zobject *Person_ctor(zobject *self, va_list *args) {
   const char *name = va_arg(*args, const char *);
   int age = va_arg(*args, int);
 
-  person->name = strdup(name); // Copy the name
+  person->name = strdup(name);  // Copy the name
   person->age = age;
 
   return self;
@@ -26,7 +27,7 @@ zobject *Person_ctor(zobject *self, va_list *args) {
 // Person destructor
 zobject *Person_dtor(zobject *self) {
   Person *person = (Person *)self;
-  free(person->name); // Free allocated memory for the name
+  free(person->name);  // Free allocated memory for the name
   return self;
 }
 
@@ -41,12 +42,9 @@ int Person_differ(const zobject *self, const zobject *other) {
   const Person *p1 = (const Person *)self;
   const Person *p2 = (const Person *)other;
 
-  if (zclassof(self) != zclassof(other))
-    return 1; // Check class equality
-  if (strcmp(p1->name, p2->name) != 0)
-    return 1; // Compare names
-  if (p1->age != p2->age)
-    return 1; // Compare ages
+  if (zclassof(self) != zclassof(other)) return 1;  // Check class equality
+  if (strcmp(p1->name, p2->name) != 0) return 1;    // Compare names
+  if (p1->age != p2->age) return 1;                 // Compare ages
 
   return 0;
 }

@@ -1,18 +1,18 @@
-ZOBJECT{
-    global:
-    znew;
-    zsizeof;
-    zdiffer;
-    zstore;
-    zclone;
-    zdelete;
-    ZObject;
-    zclassof;
-    zctor;
-    zdtor;
-    zsuper_ctor;
-    zsuper_dtor;
-    ZClazz;
-    local:
-    *;
+ZOBJECT {
+global:
+  znew;
+  zsizeof;
+  zdiffer;
+  zstore;
+  zclone;
+  zdelete;
+  ZObject;
+  zclassof;
+  zctor;
+  zdtor;
+  zsuper_ctor;
+  zsuper_dtor;
+  ZClazz;
+local:
+  *;
 };
